@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+
+"""
+usage: sphinx-blog-new-article file-name
+"""
+
+import yaml
+import sys
+import os
+import datetime
+
+def datetimeToString(date):
+    return "%04d-%02d-%02d-%02d-%02d-%02d" % (date.year,
+                                              date.month,
+                                              date.day,
+                                              date.hour,
+                                              date.minute,
+                                              date.second)
+
+def usage():
+    print __doc__ % vars()
+
+def article_directory(blog_home):
+    return os.path.join(blog_home, "articles")
+
+
+
+def main(argv):
+    if len(argv) < 2:
+        usage()
+        exit(1)
+    # load configuration from ~/.sphinx-blog
+    config_file = os.path.join(os.environ['HOME'], ".sphinx-blog")
+    if os.path.exists(config_file):
+        config = yaml.load(open(config_file).read())
+    else:
+        print "You need to have ~/.spinx-blog"
+        exit(2)
+    now = datetime.datetime.today()
+    filename = "%s-%s" % (datetimeToString(now), argv[1])
+    full_filepath = os.path.join(article_directory(config['blog_home']),
+                                 filename)
+    print "generated %s, edit it!" % (full_filepath)
+
+
+if __name__ == "__main__":
+    main(sys.argv)
