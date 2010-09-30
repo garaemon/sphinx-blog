@@ -8,6 +8,7 @@ import yaml
 import sys
 import os
 import datetime
+import re
 
 def datetimeToString(date):
     return "%04d-%02d-%02d-%02d-%02d-%02d" % (date.year,
@@ -36,10 +37,37 @@ def gen_new_article_rst(full_filepath, title):
     """ % (title))
     f.close()
 
-def gen_articles_rst(blog_home):
+def gather_articles(blog_home):
+    article_dir = article_directory(blog_home)
+    all_files = os.listdir(article_dir)
+    # artcile rst format is
+    p = re.compile("\d...-\d.-\d.-\d.-\d.-\d.-\w*\.rst")
+    articles = [f for f in all_files if re.match(p, f) != None]
+    # sort articles!
+    articles.sort()
+    articles.reverse()
+    return articles
+
+def gen_all_articles_rst(blog_home, all_articles):
+    all_articles_rst_path = os.path.join(blog_home,
+                                         "all_articles.rst")
+    f = open(all_articles_rst_path, "w")
+    f.write("""
+.. This file is auto-generated. DO NOT EDIT THIS!
+All Articles
+======
+""")
+    for article in all_articles:
+        f.write("articles/" + article + "\n")
+    f.close()
+
+def gen_articles_rst(blog_home, article_num):
+    article_files = gather_articles(blog_home)
+    latest_articles = article_files[:article_num]
+    gen_all_articles_rst(blog_home, article_files)
     pass
 
-def gen_articles_rss(blog_home):
+def gen_articles_rss(blog_home, article_num):
     pass
 
 def main(argv):
@@ -59,8 +87,8 @@ def main(argv):
     full_filepath = os.path.join(article_directory(blog_home),
                                  filename)
     gen_new_article_rst(full_filepath, argv[1])
-    gen_articles_rst(blog_home)
-    gen_articles_rss(blog_home)
+    gen_articles_rst(blog_home, config['max_latest_article_num'])
+    gen_articles_rss(blog_home, config['max_latest_article_num'])
     
     print "generated %s, edit it!" % (full_filepath)
 
